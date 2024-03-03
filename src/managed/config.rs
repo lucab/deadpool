@@ -1,4 +1,4 @@
-use std::{fmt, time::Duration};
+use std::{fmt, num::NonZeroUsize, time::Duration};
 
 use super::BuildError;
 
@@ -14,6 +14,11 @@ pub struct PoolConfig {
     ///
     /// [`Pool`]: super::Pool
     pub max_size: usize,
+
+    /// Target
+    ///
+    /// Default: `max_size / 2`
+    pub target_utilization: Option<NonZeroUsize>,
 
     /// Timeouts of the [`Pool`].
     ///
@@ -39,8 +44,13 @@ impl PoolConfig {
     /// `max_size`.
     #[must_use]
     pub fn new(max_size: usize) -> Self {
+        let target_utilization = match max_size {
+            0 => None,
+            v => NonZeroUsize::new(v.div_ceil(2)),
+        };
         Self {
             max_size,
+            target_utilization,
             timeouts: Timeouts::default(),
             queue_mode: QueueMode::default(),
         }
